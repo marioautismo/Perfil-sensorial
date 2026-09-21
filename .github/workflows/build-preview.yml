@@ -1,0 +1,35 @@
+name: Build WhatsApp preview
+
+on:
+  push:
+    paths:
+      - "preview.parts/**"
+      - ".github/workflows/build-preview.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Decode preview image
+        run: |
+          cat preview.parts/part1.txt preview.parts/part2.txt preview.parts/part3.txt preview.parts/part4.txt preview.parts/part5.txt | base64 --decode > preview-whatsapp.jpg
+          file preview-whatsapp.jpg
+          test "$(stat -c%s preview-whatsapp.jpg)" -gt 10000
+
+      - name: Commit generated image
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add preview-whatsapp.jpg
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Generar preview de WhatsApp"
+            git push
+          fi
